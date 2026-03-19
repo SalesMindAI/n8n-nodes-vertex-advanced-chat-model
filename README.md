@@ -66,8 +66,10 @@ The built-in `Google Vertex Chat Model` node (`lmChatGoogleVertex`) does not sup
 ## Compatibility
 
 - **Minimum n8n version**: 1.123.12
-- **Tested with**: n8n 1.123.12
-- **Dependencies**: Uses `@langchain/google-vertexai@2.0.0` and `@google-cloud/resource-manager@5.3.0`, matching the versions shipped with n8n 1.123.12.
+- **Tested with**: n8n 1.123.12 (self-hosted)
+- **Not compatible with n8n Cloud** (uses bundled dependencies)
+- **Bundled dependencies**: `@langchain/google-vertexai@2.0.0` and `@google-cloud/resource-manager@5.3.0`, matching the versions shipped with n8n 1.123.12.
+- **Runtime dependencies** (provided by n8n): `n8n-workflow`, `@langchain/core`, `lodash`
 
 ## Usage
 
@@ -96,7 +98,7 @@ These labels will appear in your Google Cloud billing reports, allowing you to b
 
 ## Version History
 
-### 0.1.0
+### 1.0.0
 
 Initial release.
 
@@ -104,3 +106,4 @@ Initial release.
 - Added **Labels** parameter for billing cost tracking
 - Project ID dropdown with GCP project list
 - All standard options: temperature, top K, top P, max tokens, safety settings, thinking budget
+- Self-contained: all n8n internal utilities (tracing, error handling, connection hints) are inlined for compatibility with n8n 1.x
