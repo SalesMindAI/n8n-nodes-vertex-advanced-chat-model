@@ -15,14 +15,15 @@
 		"type": "git",
 		"url": "https://github.com/SalesMindAI/n8n-nodes-vertex-advanced-chat-model.git"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",
-		"lint:fix": "n8n-node lint --fix",
-		"release": "n8n-node release",
-		"prepublishOnly": "n8n-node prerelease"
+		"lint:fix": "n8n-node lint --fix"
 	},
 	"files": [
 		"dist"
