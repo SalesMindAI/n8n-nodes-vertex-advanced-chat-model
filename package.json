@@ -1,6 +1,6 @@
 {
 	"name": "@salesmind-ai/n8n-nodes-vertex-advanced-chat-model",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "n8n community node for Google Vertex AI Chat Model with labels support for billing cost tracking",
 	"license": "MIT",
 	"homepage": "https://github.com/SalesMindAI/n8n-nodes-vertex-advanced-chat-model",
