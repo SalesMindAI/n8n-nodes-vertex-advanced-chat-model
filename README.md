@@ -1,46 +1,106 @@
 # n8n-nodes-vertex-advanced-chat-model
 
-This is an n8n community node. It lets you use _app/service name_ in your n8n workflows.
+This is an n8n community node. It lets you use **Google Vertex AI** generative models (Gemini) as a chat model in your n8n AI workflows, with added support for **request labels** for billing cost tracking.
 
-_App/service name_ is _one or two sentences describing the service this node integrates with_.
+[Google Vertex AI](https://cloud.google.com/vertex-ai) is Google Cloud's machine learning platform that provides access to Gemini and other generative AI models.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/sustainable-use-license/) workflow automation platform.
 
-[Installation](#installation)
-[Operations](#operations)
-[Credentials](#credentials)
-[Compatibility](#compatibility)
-[Usage](#usage)
-[Resources](#resources)
-[Version history](#version-history)
+[Installation](#installation) |
+[Credentials](#credentials) |
+[Node Reference](#node-reference) |
+[Compatibility](#compatibility) |
+[Usage](#usage) |
+[Resources](#resources) |
+[Version History](#version-history)
 
 ## Installation
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation.
 
-## Operations
-
-_List the operations supported by your node._
-
 ## Credentials
 
-_If users need to authenticate with the app/service, provide details here. You should include prerequisites (such as signing up with the service), available authentication methods, and how to set them up._
+This node reuses the built-in **Google Service Account API** credential (`googleApi`) that ships with n8n. You do not need to configure a new credential type.
+
+To set up the credential you need:
+
+1. A **Google Cloud project** with the Vertex AI API enabled.
+2. A **service account** with the `Vertex AI User` role (or equivalent).
+3. A **JSON key file** for that service account.
+
+In the n8n credential form, fill in:
+
+| Field                     | Description                                                |
+| ------------------------- | ---------------------------------------------------------- |
+| **Service Account Email** | The `client_email` from the JSON key file                  |
+| **Private Key**           | The `private_key` from the JSON key file                   |
+| **Region**                | The GCP region to use (e.g. `us-central1`, `europe-west1`) |
+
+## Node Reference
+
+The **Google Vertex Advanced Chat Model** node is an AI sub-node that outputs a language model. Connect it to an AI Agent, AI Chain, or any node that accepts an AI Language Model input.
+
+### Parameters
+
+| Parameter      | Description                                                                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Project ID** | Your Google Cloud project ID. Select from a dropdown list or enter manually.                                                                                                                                        |
+| **Model Name** | The Gemini model to use (default: `gemini-2.5-flash`). See [available models](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).                                                                  |
+| **Labels**     | Key-value pairs attached to each API request for billing cost tracking. See [Vertex AI labels documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-filters#add-labels). |
+
+### Options
+
+| Option                       | Description                                                | Default |
+| ---------------------------- | ---------------------------------------------------------- | ------- |
+| **Maximum Number of Tokens** | Max tokens to generate in the completion                   | 2048    |
+| **Safety Settings**          | Configure content safety filters by category and threshold | -       |
+| **Sampling Temperature**     | Controls randomness (0 = deterministic, 1 = creative)      | 0.4     |
+| **Thinking Budget**          | Reasoning tokens for thinking models (-1 = dynamic)        | -1      |
+| **Top K**                    | Limits token selection to top K candidates (-1 = disabled) | 32      |
+| **Top P**                    | Nucleus sampling threshold                                 | 1       |
+
+### What makes this different from the built-in node?
+
+The built-in `Google Vertex Chat Model` node (`lmChatGoogleVertex`) does not support the **Labels** parameter. This node adds that capability, allowing you to tag every Vertex AI API request with custom key-value labels for cost attribution, team tracking, environment tagging, or any other billing dimension supported by Google Cloud.
 
 ## Compatibility
 
-_State the minimum n8n version, as well as which versions you test against. You can also include any known version incompatibility issues._
+- **Minimum n8n version**: 1.123.12
+- **Tested with**: n8n 1.123.12
+- **Dependencies**: Uses `@langchain/google-vertexai@2.0.0` and `@google-cloud/resource-manager@5.3.0`, matching the versions shipped with n8n 1.123.12.
 
 ## Usage
 
-_This is an optional section. Use it to help users with any difficult or confusing aspects of the node._
+1. Add an **AI Agent** or **AI Chain** node to your workflow.
+2. Connect the **Google Vertex Advanced Chat Model** node to the model input.
+3. Select your Google Service Account credential.
+4. Choose your project and model.
+5. (Optional) Add labels for billing tracking, e.g. `team: sales`, `env: production`.
 
-_By the time users are looking for community nodes, they probably already know n8n basics. But if you expect new users, you can link to the [Try it out](https://docs.n8n.io/try-it-out/) documentation to help them get started._
+### Example: Cost tracking with labels
+
+Add labels to attribute API costs to specific teams or projects:
+
+- Key: `team`, Value: `marketing`
+- Key: `project`, Value: `content-generation`
+- Key: `environment`, Value: `production`
+
+These labels will appear in your Google Cloud billing reports, allowing you to break down Vertex AI costs by any dimension you define.
 
 ## Resources
 
-* [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
-* _Link to app/service documentation._
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+- [Google Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs)
+- [Vertex AI available models](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models)
+- [Vertex AI labels for billing](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-filters#add-labels)
 
-## Version history
+## Version History
 
-_This is another optional section. If your node has multiple versions, include a short description of available versions and what changed, as well as any compatibility impact._
+### 0.1.0
+
+Initial release.
+
+- Google Vertex AI Chat Model with full feature parity with the built-in node
+- Added **Labels** parameter for billing cost tracking
+- Project ID dropdown with GCP project list
+- All standard options: temperature, top K, top P, max tokens, safety settings, thinking budget
