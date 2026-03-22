@@ -4,7 +4,7 @@ export default [
 	...configWithoutCloudSupport,
 	{
 		rules: {
-			// Intentionally reusing the built-in googleApi credential from n8n-nodes-base
+			// Intentionally reusing the built-in googleApi and googlePalmApi credentials from n8n-nodes-base
 			'@n8n/community-nodes/no-credential-reuse': 'off',
 		},
 	},

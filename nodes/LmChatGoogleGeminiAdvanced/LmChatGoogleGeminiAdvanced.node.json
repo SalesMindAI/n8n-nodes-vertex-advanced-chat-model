@@ -1,0 +1,17 @@
+{
+	"node": "n8n-nodes-vertex-advanced-chat-model.lmChatGoogleGeminiAdvanced",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI"],
+	"subcategories": {
+		"AI": ["Language Models", "Root Nodes"],
+		"Language Models": ["Chat Models (Recommended)"]
+	},
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://ai.google.dev/gemini-api/docs"
+			}
+		]
+	}
+}
