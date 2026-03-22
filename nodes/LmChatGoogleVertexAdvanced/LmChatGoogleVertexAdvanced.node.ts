@@ -11,9 +11,11 @@ import {
 	type INodePropertyOptions,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { getConnectionHintNoticeField } from './shared-fields';
-import { makeN8nLlmFailedAttemptHandler } from './n8n-llm-failed-attempt-handler';
-import { N8nLlmTracing } from './n8n-llm-tracing';
+import {
+	N8nLlmTracing,
+	makeN8nLlmFailedAttemptHandler,
+	getConnectionHintNoticeField,
+} from '@n8n/ai-utilities';
 import { makeErrorFromStatus } from './error-handling';
 
 /**

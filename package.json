@@ -1,6 +1,6 @@
 {
 	"name": "@salesmind-ai/n8n-nodes-vertex-advanced-chat-model",
-	"version": "1.0.1",
+	"version": "1.0.0",
 	"description": "n8n community node for Google Vertex AI Chat Model with labels support for billing cost tracking",
 	"license": "MIT",
 	"homepage": "https://github.com/SalesMindAI/n8n-nodes-vertex-advanced-chat-model",
@@ -30,6 +30,7 @@
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
+		"aiNodeSdkVersion": 1,
 		"strict": false,
 		"credentials": [],
 		"nodes": [
@@ -42,13 +43,13 @@
 	},
 	"devDependencies": {
 		"@n8n/node-cli": "*",
-		"@types/lodash": "^4.17.24",
 		"eslint": "9.32.0",
 		"prettier": "3.6.2",
+		"release-it": "^19.0.4",
 		"typescript": "5.9.2"
 	},
 	"peerDependencies": {
-		"@langchain/core": ">=1.1.0",
-		"n8n-workflow": "*"
+		"n8n-workflow": "*",
+		"@n8n/ai-node-sdk": "*"
 	}
 }
