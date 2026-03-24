@@ -1,6 +1,6 @@
 {
 	"name": "@salesmind-ai/n8n-nodes-vertex-advanced-chat-model",
-	"version": "1.0.4",
+	"version": "1.1.0",
 	"description": "n8n community nodes for Google Vertex AI and Gemini Chat Models with labels support for billing cost tracking",
 	"license": "MIT",
 	"homepage": "https://github.com/SalesMindAI/n8n-nodes-vertex-advanced-chat-model",
@@ -34,7 +34,8 @@
 		"credentials": [],
 		"nodes": [
 			"dist/nodes/LmChatGoogleVertexAdvanced/LmChatGoogleVertexAdvanced.node.js",
-			"dist/nodes/LmChatGoogleGeminiAdvanced/LmChatGoogleGeminiAdvanced.node.js"
+			"dist/nodes/LmChatGoogleGeminiAdvanced/LmChatGoogleGeminiAdvanced.node.js",
+			"dist/nodes/GoogleGeminiAdvanced/GoogleGeminiAdvanced.node.js"
 		]
 	},
 	"dependencies": {

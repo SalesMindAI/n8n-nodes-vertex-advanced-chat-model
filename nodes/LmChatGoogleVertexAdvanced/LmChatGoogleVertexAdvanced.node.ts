@@ -285,12 +285,47 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 						name: 'thinkingBudget',
 						default: -1,
 						description:
-							'Controls reasoning tokens for thinking models. Set to 0 to disable automatic thinking. Set to -1 for dynamic thinking (default).',
+							'Controls reasoning tokens for Gemini 2.5 series thinking models. Set to 0 to disable automatic thinking. Set to -1 for dynamic thinking (default). Not supported on Gemini 3.x models (use Thinking Level instead).',
 						type: 'number',
 						typeOptions: {
 							minValue: -1,
 							numberPrecision: 0,
 						},
+					},
+					{
+						displayName: 'Thinking Level',
+						name: 'thinkingLevel',
+						type: 'options',
+						default: '',
+						description:
+							'Controls the thinking level for Gemini 3.x models. Not supported on Gemini 2.5 series (use Thinking Budget instead). If unset, the model uses its default dynamic level.',
+						options: [
+							{
+								value: '',
+								name: 'Default (Dynamic)',
+								description: "Use the model's default thinking level",
+							},
+							{
+								value: 'MINIMAL',
+								name: 'Minimal',
+								description: 'Minimal thinking — model will likely not think, but may still do so',
+							},
+							{
+								value: 'LOW',
+								name: 'Low',
+								description: 'Low thinking level',
+							},
+							{
+								value: 'MEDIUM',
+								name: 'Medium',
+								description: 'Medium thinking level',
+							},
+							{
+								value: 'HIGH',
+								name: 'High',
+								description: 'High thinking level (default for Gemini 3)',
+							},
+						],
 					},
 					{
 						displayName: 'Top K',
@@ -370,6 +405,7 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 			topK?: number;
 			topP?: number;
 			thinkingBudget?: number;
+			thinkingLevel?: string;
 		};
 
 		// Collect labels from fixedCollection
@@ -427,9 +463,18 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 				modelConfig.labels = labels;
 			}
 
-			// Add thinkingBudget if specified
+			// Add thinkingBudget if specified (Gemini 2.5 series)
 			if (options.thinkingBudget !== undefined) {
 				modelConfig.thinkingBudget = options.thinkingBudget;
+			}
+
+			// Add thinkingLevel if specified (Gemini 3.x models)
+			if (options.thinkingLevel) {
+				// thinkingLevel is not in the LangChain Vertex type but the underlying API supports it
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(modelConfig as any).thinkingConfig = {
+					thinkingLevel: options.thinkingLevel,
+				};
 			}
 
 			const model = new ChatVertexAI(modelConfig);

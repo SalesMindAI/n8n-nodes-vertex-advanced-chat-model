@@ -302,6 +302,41 @@ export class LmChatGoogleGeminiAdvanced implements INodeType {
 						type: 'number',
 					},
 					{
+						displayName: 'Thinking Level',
+						name: 'thinkingLevel',
+						type: 'options',
+						default: '',
+						description:
+							'Controls the thinking level for Gemini 3.x models. Not supported on Gemini 2.5 series (use Thinking Budget instead). If unset, the model uses its default dynamic level.',
+						options: [
+							{
+								value: '',
+								name: 'Default (Dynamic)',
+								description: "Use the model's default thinking level",
+							},
+							{
+								value: 'MINIMAL',
+								name: 'Minimal',
+								description: 'Minimal thinking — model will likely not think, but may still do so',
+							},
+							{
+								value: 'LOW',
+								name: 'Low',
+								description: 'Low thinking level',
+							},
+							{
+								value: 'MEDIUM',
+								name: 'Medium',
+								description: 'Medium thinking level',
+							},
+							{
+								value: 'HIGH',
+								name: 'High',
+								description: 'High thinking level (default for Gemini 3)',
+							},
+						],
+					},
+					{
 						displayName: 'Top K',
 						name: 'topK',
 						default: 32,
@@ -339,6 +374,7 @@ export class LmChatGoogleGeminiAdvanced implements INodeType {
 			temperature?: number;
 			topK?: number;
 			topP?: number;
+			thinkingLevel?: string;
 		};
 
 		// Collect labels from fixedCollection
@@ -360,6 +396,14 @@ export class LmChatGoogleGeminiAdvanced implements INodeType {
 		) as SafetySetting[];
 
 		try {
+			// Build thinkingConfig if thinkingLevel is specified
+			const thinkingConfig = options.thinkingLevel
+				? {
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						thinkingLevel: options.thinkingLevel as any,
+					}
+				: undefined;
+
 			const model = new ChatGoogleGenerativeAIWithLabels({
 				apiKey: credentials.apiKey as string,
 				baseUrl: credentials.host as string,
@@ -370,6 +414,7 @@ export class LmChatGoogleGeminiAdvanced implements INodeType {
 				maxOutputTokens: options.maxOutputTokens,
 				safetySettings,
 				labels,
+				thinkingConfig,
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				callbacks: [new N8nLlmTracing(this, { errorDescriptionMapper }) as any],
 				onFailedAttempt: makeN8nLlmFailedAttemptHandler(this),
