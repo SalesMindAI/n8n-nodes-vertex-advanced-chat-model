@@ -308,6 +308,7 @@ export class LmChatGoogleGeminiAdvanced implements INodeType {
 						default: '',
 						description:
 							'Controls the thinking level for Gemini 3.x models. Not supported on Gemini 2.5 series (use Thinking Budget instead). If unset, the model uses its default dynamic level.',
+						// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
 						options: [
 							{
 								value: '',
