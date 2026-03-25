@@ -28,6 +28,60 @@ interface SafetySetting {
 }
 
 /**
+ * Subclass of ChatVertexAI that injects `includeThoughts` into the
+ * thinkingConfig of the Vertex AI API request body.
+ *
+ * LangChain's @langchain/google-common only auto-sets includeThoughts when
+ * thinkingBudget (maxReasoningTokens) is provided, but the Vertex AI API
+ * supports includeThoughts as a standalone field alongside thinkingLevel.
+ *
+ * This subclass patches the connection's formatData method to post-process
+ * the request body and inject includeThoughts into generationConfig.thinkingConfig.
+ */
+class ChatVertexAIWithThinking extends ChatVertexAI {
+	private _includeThoughts: boolean;
+	// Track patched connections by reference to avoid double-patching
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private _patchedConnections = new WeakSet<any>();
+
+	constructor(fields: ChatVertexAIInput & { includeThoughts?: boolean }) {
+		super(fields);
+		this._includeThoughts = fields.includeThoughts ?? false;
+	}
+
+	/**
+	 * Patch a connection's formatData to inject includeThoughts into
+	 * the thinkingConfig after LangChain builds the request body.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private patchConnection(connection: any): void {
+		if (!this._includeThoughts || this._patchedConnections.has(connection)) return;
+
+		const originalFormatData = connection.formatData.bind(connection);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		connection.formatData = async (input: any, parameters: any) => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const data: any = await originalFormatData(input, parameters);
+			if (data?.generationConfig?.thinkingConfig) {
+				data.generationConfig.thinkingConfig.includeThoughts = true;
+			} else if (data?.generationConfig) {
+				data.generationConfig.thinkingConfig = { includeThoughts: true };
+			}
+			return data;
+		};
+
+		this._patchedConnections.add(connection);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	async _generate(messages: any, options: any, runManager?: any): Promise<any> {
+		this.patchConnection(this.connection);
+		this.patchConnection(this.streamedConnection);
+		return super._generate(messages, options, runManager);
+	}
+}
+
+/**
  * Normalizes a PEM private key string by replacing escaped newlines
  * with actual newlines and trimming whitespace.
  * Equivalent to `formatPrivateKey` from n8n-nodes-base.
@@ -228,6 +282,14 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 				default: {},
 				options: [
 					{
+						displayName: 'Include Thoughts',
+						name: 'includeThoughts',
+						type: 'boolean',
+						default: false,
+						description:
+							"Whether to include the model's intermediate thinking steps in the response. Thoughts provide insights into the model's reasoning process and help with debugging. Thoughts are returned only when available.",
+					},
+					{
 						displayName: 'Maximum Number of Tokens',
 						name: 'maxOutputTokens',
 						default: 2048,
@@ -296,34 +358,39 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 						displayName: 'Thinking Level',
 						name: 'thinkingLevel',
 						type: 'options',
-						default: '',
+						default: 'THINKING_LEVEL_UNSPECIFIED',
 						description:
 							'Controls the thinking level for Gemini 3.x models. Not supported on Gemini 2.5 series (use Thinking Budget instead). If unset, the model uses its default dynamic level.',
+						// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
 						options: [
 							{
-								value: '',
+								value: 'THINKING_LEVEL_UNSPECIFIED',
 								name: 'Default (Dynamic)',
 								description: "Use the model's default thinking level",
 							},
 							{
 								value: 'MINIMAL',
 								name: 'Minimal',
-								description: 'Minimal thinking — model will likely not think, but may still do so',
+								description:
+									'Near-zero thinking. Only supported on Gemini 3 Flash and Gemini 3.1 Flash-Lite (not supported on Pro models). Requires thought signatures.',
 							},
 							{
 								value: 'LOW',
 								name: 'Low',
-								description: 'Low thinking level',
+								description:
+									'Low thinking level. Suitable for simpler tasks and high-throughput scenarios.',
 							},
 							{
 								value: 'MEDIUM',
 								name: 'Medium',
-								description: 'Medium thinking level',
+								description:
+									'Medium thinking level. Only supported on Gemini 3 Flash, Gemini 3.1 Pro, and Gemini 3.1 Flash-Lite.',
 							},
 							{
 								value: 'HIGH',
 								name: 'High',
-								description: 'High thinking level (default for Gemini 3)',
+								description:
+									'High thinking level. Default for Gemini 3 Pro and Gemini 3 Flash. Best for complex reasoning tasks.',
 							},
 						],
 					},
@@ -406,6 +473,7 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 			topP?: number;
 			thinkingBudget?: number;
 			thinkingLevel?: string;
+			includeThoughts?: boolean;
 		};
 
 		// Collect labels from fixedCollection
@@ -469,15 +537,21 @@ export class LmChatGoogleVertexAdvanced implements INodeType {
 			}
 
 			// Add thinkingLevel if specified (Gemini 3.x models)
+			// Supported natively in @langchain/google-common >= 2.1.26
+			// Cast needed because the LangChain type does not include 'MINIMAL',
+			// but the Vertex AI REST API accepts it
 			if (options.thinkingLevel) {
-				// thinkingLevel is not in the LangChain Vertex type but the underlying API supports it
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				(modelConfig as any).thinkingConfig = {
-					thinkingLevel: options.thinkingLevel,
-				};
+				modelConfig.thinkingLevel = options.thinkingLevel as ChatVertexAIInput['thinkingLevel'];
 			}
 
-			const model = new ChatVertexAI(modelConfig);
+			// Use ChatVertexAIWithThinking subclass to inject includeThoughts
+			// into the thinkingConfig that LangChain builds, since
+			// @langchain/google-common does not propagate includeThoughts
+			// as a standalone model parameter
+			const model = new ChatVertexAIWithThinking({
+				...modelConfig,
+				includeThoughts: options.includeThoughts ?? false,
+			});
 
 			return {
 				response: model,
